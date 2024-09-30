@@ -21,22 +21,26 @@ jobs:
         choco install -y visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Component.VC.ATL --add Microsoft.VisualStudio.Component.Windows10SDK.20348 --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
         choco install -y cmake git
 
-    - name: Clone submodules
+    - name: Create build directory
       run: |
-        git submodule update --init --recursive
+        mkdir build_x64
 
     - name: Configure build
       run: |
-        cmake --preset windows-x64
+        cd build_x64
+        cmake .. -G "Visual Studio 17 2022" -A x64
 
     - name: Build obs-studio
       run: |
-        cmake --build --preset windows-x64 --config Release
+        cd build_x64
+        cmake --build . --config Release
 
     - name: Run tests
       run: |
-        .\build_x64\rundir\Release\bin\64bit\obs64.exe --tests
+        cd build_x64
+        .\rundir\Release\bin\64bit\obs64.exe --tests
 
     - name: Package distribution
       run: |
-        cmake --build --preset windows-x64 --config Release --target package
+        cd build_x64
+        cmake --build . --config Release --target package
