@@ -1,0 +1,42 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: windows-2022
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: |
+        choco install -y visualstudio2022community --package-parameters "--add Microsoft.VisualStudio.Component.VC.ATL --add Microsoft.VisualStudio.Component.Windows10SDK.20348 --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
+        choco install -y cmake git
+
+    - name: Clone submodules
+      run: |
+        git submodule update --init --recursive
+
+    - name: Configure build
+      run: |
+        cmake --preset windows-x64
+
+    - name: Build obs-studio
+      run: |
+        cmake --build --preset windows-x64 --config Release
+
+    - name: Run tests
+      run: |
+        .\build_x64\rundir\Release\bin\64bit\obs64.exe --tests
+
+    - name: Package distribution
+      run: |
+        cmake --build --preset windows-x64 --config Release --target package
